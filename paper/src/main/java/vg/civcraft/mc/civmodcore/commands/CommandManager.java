@@ -7,49 +7,70 @@ import co.aikar.commands.BukkitCommandManager;
 import co.aikar.commands.CommandCompletions;
 import co.aikar.commands.CommandCompletions.CommandCompletionHandler;
 import co.aikar.commands.CommandContexts;
+import co.aikar.commands.InvalidCommandArgument;
+import co.aikar.commands.MinecraftMessageKeys;
 import com.google.common.base.Strings;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.logging.Level;
-import javax.annotation.Nonnull;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
+import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.plugin.Plugin;
+import org.jetbrains.annotations.NotNull;
 import vg.civcraft.mc.civmodcore.inventory.items.ItemUtils;
 import vg.civcraft.mc.civmodcore.utilities.CivLogger;
+import vg.civcraft.mc.civmodcore.utilities.UuidUtils;
 
 /**
  * Command registration class wrapper around {@link BukkitCommandManager}.
+ *
+ * This manager comes with several additional completions and contexts by default:
+ *
+ * <p>Completions</p>
+ * <ul>
+ *     <li>"none" - Alias for "nothing"</li>
+ *     <li>"allplayers" - All known players</li>
+ *     <li>"materials" - All Bukkit materials</li>
+ *     <li>"itemMaterials" - All Bukkit item-materials</li>
+ * </ul>
+ *
+ * <p>Contexts:</p>
+ * <ul>
+ *     <li>"org.bukkit.command.ConsoleCommandSender" - Ensure the sender is the console</li>
+ *     <li>"org.bukkit.World" - Parses a Bukkit world without defaulting to the sender's world</li>
+ * </ul>
  */
 public class CommandManager extends BukkitCommandManager {
 
 	private final CivLogger logger;
 
-    /**
+	/**
 	 * Creates a new command manager for Aikar based commands and tab completions.
 	 *
 	 * @param plugin The plugin to bind this manager to.
 	 */
-    public CommandManager(@Nonnull final Plugin plugin) {
-    	super(Objects.requireNonNull(plugin));
-    	this.logger = CivLogger.getLogger(plugin.getClass(), getClass());
-    }
+	public CommandManager(@NotNull final Plugin plugin) {
+		super(Objects.requireNonNull(plugin));
+		this.logger = CivLogger.getLogger(plugin.getClass(), getClass());
+	}
 
 	/**
 	 * Will initialise the manager and register both commands and completions. You should only really use this if
 	 * you've used {@link CommandManager#reset()} or both {@link #unregisterCommands()} and
 	 * {@link #unregisterCompletions()}, otherwise there may be issues.
 	 */
-    public final void init() {
+	public final void init() {
 		registerCommands();
 		registerCompletions(getCommandCompletions());
 		registerContexts(getCommandContexts());
@@ -59,20 +80,23 @@ public class CommandManager extends BukkitCommandManager {
 	 * This is called as part of {@link CommandManager#init()} and should be overridden by an extending class to
 	 * register all (or as many) commands at once.
 	 */
-    public void registerCommands() { }
+	public void registerCommands() {
 
-    /**
+	}
+
+	/**
 	 * This is called as part of {@link CommandManager#init()} and should be overridden by an extending class to
 	 * register all (or as many) completions at once, though make sure to call super.
 	 *
 	 * @param completions The completion manager is given. It is the same manager that can be reached via
 	 *                    {@link #getCommandCompletions()}.
 	 */
-    public void registerCompletions(@Nonnull final CommandCompletions<BukkitCommandCompletionContext> completions) {
-		completions.registerCompletion("none", (context) -> Collections.emptyList());
+	public void registerCompletions(@NotNull final CommandCompletions<BukkitCommandCompletionContext> completions) {
+		completions.registerCompletion("none", (context) -> List.of());
 		completions.registerAsyncCompletion("allplayers", (context) ->
 				Arrays.stream(Bukkit.getOfflinePlayers())
 						.map(OfflinePlayer::getName)
+						.filter(Objects::nonNull)
 						.toList());
 		completions.registerAsyncCompletion("materials", (context) ->
 				Arrays.stream(Material.values())
@@ -92,7 +116,33 @@ public class CommandManager extends BukkitCommandManager {
 	 * @param contexts The context manager is given. It is the same manager that can be reached via
 	 *                 {@link #getCommandContexts()}.
 	 */
-	public void registerContexts(@Nonnull final CommandContexts<BukkitCommandExecutionContext> contexts) { }
+	public void registerContexts(@NotNull final CommandContexts<BukkitCommandExecutionContext> contexts) {
+		contexts.registerIssuerAwareContext(ConsoleCommandSender.class, (context) -> {
+			if (context.getSender() instanceof final ConsoleCommandSender console) {
+				return console;
+			}
+			throw new InvalidCommandArgument("Command can only be called from console!", false);
+		});
+		// Override ACF Bukkit's default behaviour of falling back to the sender's world.
+		contexts.registerContext(World.class, (context) -> {
+			final String firstArg = context.getFirstArg();
+			final World world;
+			// Test UUID
+			final UUID worldUUID = UuidUtils.fromString(firstArg);
+			if (worldUUID != null) {
+				world = Bukkit.getWorld(worldUUID);
+			}
+			else {
+				// Otherwise, get from name
+				world = Bukkit.getWorld(firstArg);
+			}
+			if (world != null) {
+				context.popFirstArg();
+				return world;
+			}
+			throw new InvalidCommandArgument(MinecraftMessageKeys.INVALID_WORLD);
+		});
+	}
 
 	/**
 	 * Registers a new command and any attached tab completions.
@@ -101,8 +151,8 @@ public class CommandManager extends BukkitCommandManager {
 	 * @param forceReplace Whether to force replace any existing command.
 	 */
 	@Override
-    public final void registerCommand(@Nonnull final BaseCommand command, final boolean forceReplace) {
-        super.registerCommand(Objects.requireNonNull(command), forceReplace);
+	public final void registerCommand(@NotNull final BaseCommand command, final boolean forceReplace) {
+		super.registerCommand(Objects.requireNonNull(command), forceReplace);
 		this.logger.info("Command [" + command.getClass().getSimpleName() + "] registered.");
 		getTabCompletions(command.getClass()).forEach((method, annotation) -> {
 			if (annotation.async()) {
@@ -115,16 +165,16 @@ public class CommandManager extends BukkitCommandManager {
 			}
 			this.logger.info("Command Completer [" + annotation.value() + "] registered.");
 		});
-    }
+	}
 
-    /**
+	/**
 	 * Deregisters a command and any attached tab completions.
 	 *
 	 * @param command The command instance to register.
 	 */
 	@SuppressWarnings("unchecked")
 	@Override
-    public final void unregisterCommand(@Nonnull final BaseCommand command) {
+	public final void unregisterCommand(@NotNull final BaseCommand command) {
 		super.unregisterCommand(Objects.requireNonNull(command));
 		this.logger.info("Command [" + command.getClass().getSimpleName() + "] unregistered.");
 		final Map<String, CommandCompletionHandler<BukkitCommandCompletionContext>> internal;
@@ -151,8 +201,8 @@ public class CommandManager extends BukkitCommandManager {
 	/**
 	 * Resets the manager, resetting all commands and completions.
 	 */
-    public final void reset() {
-    	unregisterCommands();
+	public final void reset() {
+		unregisterCommands();
 		unregisterCompletions();
 	}
 
@@ -176,7 +226,7 @@ public class CommandManager extends BukkitCommandManager {
 		catch (final Throwable exception) {
 			this.logger.log(Level.WARNING,
 					"Could not tab complete [@" + id + "]: an error with the handler!", exception);
-			return Collections.emptyList();
+			return List.of();
 		}
 	}
 
