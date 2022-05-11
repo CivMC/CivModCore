@@ -6,14 +6,18 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import lombok.experimental.UtilityClass;
 import org.apache.commons.lang3.ArrayUtils;
 import org.bukkit.Material;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 import vg.civcraft.mc.civmodcore.inventory.items.ItemUtils;
 
 @UtilityClass
@@ -112,6 +116,25 @@ public final class InventoryUtils {
 	 */
 	public static boolean hasOtherViewers(@Nullable final Inventory inventory) {
 		return inventory != null && inventory.getViewers().size() > 1;
+	}
+
+	/**
+	 * Checks whether an inventory has other viewers.
+	 *
+	 * @param inventory The inventory to check.
+	 * @param viewer The viewer to exclude from the check.
+	 * @return Returns true if an inventory has other viewers.
+	 */
+	public boolean hasOtherViewersOtherThan(@NotNull final Inventory inventory,
+											@NotNull final HumanEntity viewer) {
+		final List<HumanEntity> viewers = inventory.getViewers();
+		if (viewers.size() > 1) {
+			return true;
+		}
+		final HumanEntity lastViewer = viewers.get(0);
+		// If the last viewer is the given viewer, then there aren't any others.
+		// If the last viewer isn't the given viewer, then the given viewer isn't actually a viewer.
+		return lastViewer != viewer;
 	}
 
 	/**
@@ -236,6 +259,15 @@ public final class InventoryUtils {
 		formerInventory.setContents(formerClone.getContents());
 		latterInventory.setContents(latterClone.getContents());
 		return true;
+	}
+
+	/**
+	 * @param inventory The inventory to stream.
+	 * @return Returns a stream of the given inventory.
+	 */
+	@NotNull
+	public Stream<ItemStack> streamOf(@NotNull final Inventory inventory) {
+		return StreamSupport.stream(inventory.spliterator(), false);
 	}
 
 }
