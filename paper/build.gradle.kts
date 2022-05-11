@@ -20,8 +20,8 @@ dependencies {
 
 	compileOnly("it.unimi.dsi:fastutil:8.2.2")
 
-	compileOnly("org.projectlombok:lombok:1.18.20")
-	annotationProcessor ("org.projectlombok:lombok:1.18.20")
+	compileOnly("org.projectlombok:lombok:1.18.24")
+	annotationProcessor("org.projectlombok:lombok:1.18.24")
 
 	testImplementation("org.junit.jupiter:junit-jupiter-api:5.2.0")
 	testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:5.2.0")
