@@ -15,7 +15,6 @@ import vg.civcraft.mc.civmodcore.inventory.items.EnchantUtils;
 import vg.civcraft.mc.civmodcore.inventory.items.MoreTags;
 import vg.civcraft.mc.civmodcore.inventory.items.SpawnEggUtils;
 import vg.civcraft.mc.civmodcore.inventory.items.TreeTypeUtils;
-import vg.civcraft.mc.civmodcore.maps.MapColours;
 import vg.civcraft.mc.civmodcore.players.scoreboard.bottom.BottomLineAPI;
 import vg.civcraft.mc.civmodcore.players.scoreboard.side.ScoreBoardAPI;
 import vg.civcraft.mc.civmodcore.players.scoreboard.side.ScoreBoardListener;
@@ -86,7 +85,6 @@ public final class CivModCorePlugin extends ACivMod {
 		SpawnEggUtils.init();
 		TreeTypeUtils.init();
 		BottomLineAPI.init();
-		MapColours.init();
 		this.skinCache = new SkinCache(this, this.config.getSkinCacheThreads());
 	}
 
