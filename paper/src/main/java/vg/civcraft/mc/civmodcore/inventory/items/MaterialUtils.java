@@ -9,10 +9,13 @@ import javax.annotation.Nullable;
 import lombok.experimental.UtilityClass;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TranslatableComponent;
+import net.kyori.adventure.translation.Translatable;
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Material;
 import org.bukkit.Tag;
 import org.bukkit.inventory.ItemStack;
+import vg.civcraft.mc.civmodcore.chat.ChatUtils;
+import vg.civcraft.mc.civmodcore.utilities.DeprecationUtils;
 
 /**
  * <p>See <a href="https://github.com/Protonull/BukkitReport/tree/master/reports">BukkitReports</a>.</p>
@@ -51,9 +54,13 @@ public final class MaterialUtils {
 	 *
 	 * @param material The material to translate.
 	 * @return Returns a translatable component based on the given material.
+	 *
+	 * @deprecated Use {@link ChatUtils#asTranslatable(Translatable)} instead.
 	 */
+	@Deprecated
 	@Nonnull
 	public static TranslatableComponent asTranslatable(@Nonnull final Material material) {
+		DeprecationUtils.printDeprecationWarning();
 		return Component.translatable(material.translationKey());
 	}
 

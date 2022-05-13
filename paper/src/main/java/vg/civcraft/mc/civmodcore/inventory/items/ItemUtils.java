@@ -10,6 +10,7 @@ import javax.annotation.Nullable;
 import lombok.experimental.UtilityClass;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TranslatableComponent;
+import net.kyori.adventure.translation.Translatable;
 import org.bukkit.Material;
 import org.bukkit.craftbukkit.v1_18_R2.inventory.CraftItemStack;
 import org.bukkit.inventory.ItemStack;
@@ -17,6 +18,7 @@ import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.Contract;
 import vg.civcraft.mc.civmodcore.chat.ChatUtils;
+import vg.civcraft.mc.civmodcore.utilities.DeprecationUtils;
 
 /**
  * Class of static APIs for Items. Replaces ISUtils.
@@ -27,9 +29,13 @@ public final class ItemUtils {
 	/**
 	 * @param item The item to get a translatable component for.
 	 * @return Returns a translatable component of the given item.
+	 *
+	 * @deprecated Use {@link ChatUtils#asTranslatable(Translatable)} instead.
 	 */
+	@Deprecated
 	@Nonnull
 	public static TranslatableComponent asTranslatable(@Nonnull final ItemStack item) {
+		DeprecationUtils.printDeprecationWarning();
 		return Component.translatable(item.translationKey());
 	}
 

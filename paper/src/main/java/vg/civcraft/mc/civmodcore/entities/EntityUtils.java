@@ -3,9 +3,11 @@ package vg.civcraft.mc.civmodcore.entities;
 import com.google.common.base.Strings;
 import javax.annotation.Nonnull;
 import lombok.experimental.UtilityClass;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TranslatableComponent;
+import net.kyori.adventure.translation.Translatable;
 import org.bukkit.entity.EntityType;
+import vg.civcraft.mc.civmodcore.chat.ChatUtils;
+import vg.civcraft.mc.civmodcore.utilities.DeprecationUtils;
 
 /**
  * Class of static APIs for Entities.
@@ -41,9 +43,14 @@ public final class EntityUtils {
 	/**
 	 * @param entityType The entity type to translate.
 	 * @return Returns a translatable component based on the given entity type.
+	 *
+	 * @deprecated Use {@link ChatUtils#asTranslatable(Translatable)} instead.
 	 */
+	@Deprecated
+	@Nonnull
 	public static TranslatableComponent asTranslatable(@Nonnull final EntityType entityType) {
-		return Component.translatable(entityType.translationKey());
+		DeprecationUtils.printDeprecationWarning();
+		return ChatUtils.asTranslatable(entityType);
 	}
 
 }

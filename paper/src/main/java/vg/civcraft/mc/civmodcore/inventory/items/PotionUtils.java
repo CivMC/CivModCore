@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 import lombok.experimental.UtilityClass;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TranslatableComponent;
-import net.minecraft.world.effect.MobEffect;
+import net.kyori.adventure.translation.Translatable;
 import org.apache.commons.lang3.tuple.Pair;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
@@ -16,6 +16,7 @@ import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import vg.civcraft.mc.civmodcore.chat.ChatUtils;
+import vg.civcraft.mc.civmodcore.utilities.DeprecationUtils;
 
 @UtilityClass
 public final class PotionUtils {
@@ -55,24 +56,14 @@ public final class PotionUtils {
 	/**
 	 * @param effect The potion effect to get a translatable component for.
 	 * @return Returns a translatable component for the given potion effect.
+	 *
+	 * @deprecated Use {@link ChatUtils#asTranslatable(Translatable)} instead.
 	 */
-	@SuppressWarnings("deprecation")
+	@Deprecated
 	@Nonnull
 	public static TranslatableComponent asTranslatable(@Nonnull final PotionEffectType effect) {
-		final MobEffect mojang = MobEffect.byId(effect.getId());
-		assert mojang != null;
-		final String key = mojang.getDescriptionId(); // Gets the translation key
-		// If the obfuscation has changed, look for a method on MobEffectList like:
-		//
-		//    protected String b() {
-		//        if (this.d == null) {
-		//            this.d = SystemUtils.a("effect", IRegistry.V.getKey(this));
-		//        }
-		//        return this.d;
-		//    }
-		//
-		// then use whatever method calls that method
-		return Component.translatable(key);
+		DeprecationUtils.printDeprecationWarning();
+		return Component.translatable(effect.translationKey());
 	}
 
 	/**

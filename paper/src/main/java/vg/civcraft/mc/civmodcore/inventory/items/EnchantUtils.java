@@ -15,6 +15,7 @@ import javax.annotation.Nullable;
 import lombok.experimental.UtilityClass;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TranslatableComponent;
+import net.kyori.adventure.translation.Translatable;
 import org.apache.commons.collections4.CollectionUtils;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
@@ -23,6 +24,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import vg.civcraft.mc.civmodcore.CivModCorePlugin;
 import vg.civcraft.mc.civmodcore.chat.ChatUtils;
 import vg.civcraft.mc.civmodcore.utilities.CivLogger;
+import vg.civcraft.mc.civmodcore.utilities.DeprecationUtils;
 import vg.civcraft.mc.civmodcore.utilities.KeyedUtils;
 
 /**
@@ -107,9 +109,13 @@ public final class EnchantUtils {
 	/**
 	 * @param enchant The enchantment to get a translatable component for.
 	 * @return Returns a translatable component for the given enchantment.
+	 *
+	 * @deprecated Use {@link ChatUtils#asTranslatable(Translatable)} instead.
 	 */
+	@Deprecated
 	@Nonnull
 	public static TranslatableComponent asTranslatable(@Nonnull final Enchantment enchant) {
+		DeprecationUtils.printDeprecationWarning();
 		return Component.translatable(enchant.translationKey());
 	}
 

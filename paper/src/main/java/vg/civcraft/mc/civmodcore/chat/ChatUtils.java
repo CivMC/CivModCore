@@ -8,22 +8,26 @@ import java.util.Objects;
 import lombok.experimental.UtilityClass;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.event.HoverEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import net.kyori.adventure.translation.Translatable;
 import net.md_5.bungee.api.ChatColor;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.craftbukkit.v1_18_R2.util.CraftChatMessage;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionType;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import vg.civcraft.mc.civmodcore.inventory.items.ItemUtils;
+import vg.civcraft.mc.civmodcore.inventory.items.PotionUtils;
 import vg.civcraft.mc.civmodcore.utilities.DeprecationUtils;
 
 @UtilityClass
@@ -355,6 +359,19 @@ public class ChatUtils {
 					.build());
 		}
 		return item.asHoverEvent();
+	}
+
+	/**
+	 * Convenience method that converts a translatable object into a translation component.
+	 *
+	 * Be aware of other translatable utilities such as {@link PotionUtils#asTranslatable(PotionType)} regarding
+	 * specific cases, particularly when the objects do not inherit from {@link Translatable}.
+	 *
+	 * @param translatable The translatable object to wrap.
+	 * @return Returns a translation-component that can be used in components.
+	 */
+	public @NotNull TranslatableComponent asTranslatable(final @NotNull Translatable translatable) {
+		return Component.translatable(translatable.translationKey());
 	}
 
 }
