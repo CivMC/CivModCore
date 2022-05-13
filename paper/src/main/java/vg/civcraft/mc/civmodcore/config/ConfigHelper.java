@@ -128,16 +128,22 @@ public final class ConfigHelper {
 	 * @param config ConfigurationSection to parse the items from
 	 * @return The item map created
 	 */
-	@Nonnull
-	public static ItemMap parseItemMap(@Nullable final ConfigurationSection config) {
+	public @NotNull ItemMap parseItemMap(final @Nullable ConfigurationSection config) {
 		final var result = new ItemMap();
 		if (config == null) {
 			return result;
 		}
 		for (final String key : config.getKeys(false)) {
-			ConfigurationSection current = config.getConfigurationSection(key);
-			ItemMap partMap = parseItemMapDirectly(current);
-			result.merge(partMap);
+			final Object value = config.get(key, null);
+			if (value instanceof final ConfigurationSection current) {
+				result.merge(parseItemMapDirectly(current));
+			}
+			else if (value instanceof final ItemStack item) {
+				result.addItemStack(item);
+			}
+			else {
+				LOGGER.warning("ItemMap segment \"" + key + "\" cannot be parsed!");
+			}
 		}
 		return result;
 	}
