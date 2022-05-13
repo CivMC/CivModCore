@@ -5,8 +5,6 @@ import java.awt.Color;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import lombok.experimental.UtilityClass;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -24,10 +22,12 @@ import org.bukkit.craftbukkit.v1_18_R2.util.CraftChatMessage;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import vg.civcraft.mc.civmodcore.inventory.items.ItemUtils;
+import vg.civcraft.mc.civmodcore.utilities.DeprecationUtils;
 
 @UtilityClass
-public final class ChatUtils {
+public class ChatUtils {
 
 	/**
 	 * This is necessary as {@link ChatColor#values()} has all colours <i>and</i> all formats.
@@ -35,7 +35,7 @@ public final class ChatUtils {
 	 * @deprecated Use {@link NamedTextColor} instead.
 	 */
 	@Deprecated
-	public static final List<ChatColor> COLOURS = List.of(
+	public final List<ChatColor> COLOURS = List.of(
 			ChatColor.BLACK,
 			ChatColor.DARK_BLUE,
 			ChatColor.DARK_GREEN,
@@ -62,9 +62,11 @@ public final class ChatUtils {
 	 *
 	 * @deprecated Use {@link net.kyori.adventure.text.format.TextColor#color(int, int, int)} instead.
 	 */
-	@Nonnull
 	@Deprecated
-	public static ChatColor fromRGB(final byte r, final byte g, final byte b) {
+	public @NotNull ChatColor fromRGB(final byte r,
+									  final byte g,
+									  final byte b) {
+		DeprecationUtils.printDeprecationWarning();
 		return ChatColor.of(new Color(r, g, b));
 	}
 
@@ -75,8 +77,9 @@ public final class ChatUtils {
 	 * @return Returns the closest Minecraft match, or null.
 	 */
 	@Contract("!null -> !null")
-	@Nullable
-	public static ChatColor collapseColour(@Nullable final ChatColor colour) {
+	@Deprecated
+	public @Nullable ChatColor collapseColour(final ChatColor colour) {
+		DeprecationUtils.printDeprecationWarning();
 		if (colour == null) {
 			return null;
 		}
@@ -87,8 +90,8 @@ public final class ChatUtils {
 			final Color currentColor = currentColour.getColor();
 			final double distance = Math.sqrt(
 					Math.pow(color.getRed() - currentColor.getRed(), 2)
-					- Math.pow(color.getGreen() - currentColor.getGreen(), 2)
-					- Math.pow(color.getBlue() - currentColor.getBlue(), 2));
+							- Math.pow(color.getGreen() - currentColor.getGreen(), 2)
+							- Math.pow(color.getBlue() - currentColor.getBlue(), 2));
 			if (nearestDistance > distance) {
 				nearestDistance = distance;
 				nearestColour = currentColour;
@@ -105,9 +108,8 @@ public final class ChatUtils {
 	 * @deprecated Please use MiniMessage instead.
 	 * <a href="https://docs.adventure.kyori.net/minimessage.html">Read More</a>.
 	 */
-	@Nonnull
 	@Deprecated
-	public static String parseColor(@Nonnull String string) {
+	public @NotNull String parseColor(@NotNull String string) {
 		string = parseColorAmp(string);
 		string = parseColorAcc(string);
 		string = parseColorTags(string);
@@ -118,20 +120,17 @@ public final class ChatUtils {
 	 * @deprecated Please use MiniMessage instead.
 	 * <a href="https://docs.adventure.kyori.net/minimessage.html">Read More</a>.
 	 */
-	@Nonnull
 	@Deprecated
-	public static String parseColorAmp(@Nonnull String string) {
-		string = string.replace("&&", "&");
-		return ChatColor.translateAlternateColorCodes('&', string);
+	public @NotNull String parseColorAmp(final @NotNull String string) {
+		return ChatColor.translateAlternateColorCodes('&', string.replace("&&", "&"));
 	}
 
 	/**
 	 * @deprecated Please use MiniMessage instead.
 	 * <a href="https://docs.adventure.kyori.net/minimessage.html">Read More</a>.
 	 */
-	@Nonnull
 	@Deprecated
-	public static String parseColorAcc(@Nonnull String string) {
+	public @NotNull String parseColorAcc(final @NotNull String string) {
 		return ChatColor.translateAlternateColorCodes('`', string);
 	}
 
@@ -139,9 +138,8 @@ public final class ChatUtils {
 	 * @deprecated Please use MiniMessage instead.
 	 * <a href="https://docs.adventure.kyori.net/minimessage.html">Read More</a>.
 	 */
-	@Nonnull
 	@Deprecated
-	public static String parseColorTags(@Nonnull String string) {
+	public @NotNull String parseColorTags(final @NotNull String string) {
 		return string
 				.replace("<black>", ChatColor.BLACK.toString())
 				.replace("<dblue>", ChatColor.DARK_BLUE.toString())
@@ -202,14 +200,11 @@ public final class ChatUtils {
 	 *
 	 * @param component The component to test if null or empty.
 	 * @return Returns true if the component is null or has no visible content.
-	 * 
-	 * @deprecated Has been deprecated due to Paper's move to Kyori's Adventure.
 	 */
-	public static boolean isNullOrEmpty(@Nullable final Component component) {
-		if (component == null || component == Component.empty()) {
-			return true;
-		}
-		return StringUtils.isBlank(PlainTextComponentSerializer.plainText().serialize(component));
+	public boolean isNullOrEmpty(final Component component) {
+		return component == null
+				|| component.equals(Component.empty())
+				|| StringUtils.isBlank(PlainTextComponentSerializer.plainText().serialize(component));
 	}
 
 	/**
@@ -221,18 +216,18 @@ public final class ChatUtils {
 	 * @param component The component to test if null or empty.
 	 * @return Returns true if the component is null or has no visible content.
 	 */
-	public static boolean isBaseComponent(@Nullable final Component component) {
+	public boolean isBaseComponent(final Component component) {
 		if (component == null) {
 			return false;
 		}
-		return (!(component instanceof TextComponent textComponent) || StringUtils.isEmpty(textComponent.content()))
+		return (!(component instanceof final TextComponent textComponent) || StringUtils.isEmpty(textComponent.content()))
 				&& !component.children().isEmpty()
 				&& component.clickEvent() == null
 				&& component.hoverEvent() == null
 				&& !component.hasStyling();
 	}
 
-	private static final Map<TextDecoration, TextDecoration.State> NORMALISED_DECORATION_MAP =
+	private final Map<TextDecoration, TextDecoration.State> NORMALISED_DECORATION_MAP =
 			Map.of(TextDecoration.ITALIC, TextDecoration.State.FALSE);
 
 	/**
@@ -242,16 +237,16 @@ public final class ChatUtils {
 	 * @param component The component to check.
 	 * @return Returns true if the given component is "normalised."
 	 */
-	public static boolean isNormalisedComponent(@Nullable final Component component) {
-		if (!(component instanceof final TextComponent textComponent)) {
-			return false;
+	public boolean isNormalisedComponent(final Component component) {
+		if (component instanceof final TextComponent textComponent) {
+			return StringUtils.isEmpty(textComponent.content())
+					&& !component.children().isEmpty()
+					&& component.clickEvent() == null
+					&& component.hoverEvent() == null
+					&& Objects.equals(component.color(), NamedTextColor.WHITE)
+					&& Objects.equals(component.decorations(), NORMALISED_DECORATION_MAP);
 		}
-		return StringUtils.isEmpty(textComponent.content())
-				&& !component.children().isEmpty()
-				&& component.clickEvent() == null
-				&& component.hoverEvent() == null
-				&& Objects.equals(component.color(), NamedTextColor.WHITE)
-				&& Objects.equals(component.decorations(), NORMALISED_DECORATION_MAP);
+		return false;
 	}
 
 	/**
@@ -261,8 +256,7 @@ public final class ChatUtils {
 	 * @param components The component / components to wrap.
 	 * @return Returns the normalised component, or empty if no components are passed.
 	 */
-	@Nonnull
-	public static Component normaliseComponent(final Component... components) {
+	public @NotNull Component normaliseComponent(final Component... components) {
 		if (ArrayUtils.isEmpty(components)) {
 			return Component.empty();
 		}
@@ -280,8 +274,7 @@ public final class ChatUtils {
 	 * @param components The components to wrap.
 	 * @return Returns the normalised component, or empty if no components are passed.
 	 */
-	@Nonnull
-	public static Component normaliseComponent(@Nullable final List<Component> components) {
+	public @NotNull Component normaliseComponent(final List<Component> components) {
 		if (CollectionUtils.isEmpty(components)) {
 			return Component.empty();
 		}
@@ -298,9 +291,8 @@ public final class ChatUtils {
 	 * @param component The component to stringify.
 	 * @return Returns a stringified version of the given component.
 	 */
-	@Nonnull
-	public static String stringify(@Nullable final Component component) {
-		return component == null || component == Component.empty() ? "" :
+	public @NotNull String stringify(final Component component) {
+		return component == null || Component.empty().equals(component) ? "" :
 				CraftChatMessage.fromComponent(PaperAdventure.asVanilla(component));
 	}
 
@@ -311,19 +303,9 @@ public final class ChatUtils {
 	 * @return Returns a new component, or null if the given string was null.
 	 */
 	@Contract("!null -> !null")
-	@Nullable
-	public static Component upgradeLegacyString(@Nullable final String string) {
+	public @Nullable Component upgradeLegacyString(final String string) {
 		return string == null ? null : string.isEmpty() ? Component.empty() :
 				LegacyComponentSerializer.legacySection().deserialize(string);
-	}
-
-	/**
-	 * @return Generates a new text component that's specifically <i>NOT</i> italicised. Use this for item names and
-	 *         lore.
-	 */
-	@Nonnull
-	public static TextComponent newComponent() {
-		return newComponent("");
 	}
 
 	/**
@@ -332,27 +314,11 @@ public final class ChatUtils {
 	 * @param content The text content for the component.
 	 * @return Returns the generated text component.
 	 */
-	@Nonnull
-	public static TextComponent newComponent(final String content) {
-		return Component.text(Objects.requireNonNull(content))
-				.decoration(TextDecoration.ITALIC, TextDecoration.State.FALSE);
-	}
-
-	/**
-	 * Clones a component.
-	 *
-	 * @param component The component to clone.
-	 * @return Returns a clone of the given component.
-	 *
-	 * @deprecated Kyori components are immutable, so any methods that offer to update the component will actually
-	 *             instantiate a new component with the modification, thus making this utility unnecessary, if not
-	 *             downright inefficient.
-	 */
-	@Contract("!null -> !null")
-	@Nullable
-	@Deprecated(forRemoval = true)
-	public static Component cloneComponent(@Nullable final Component component) {
-		return component == null ? null : component.style(component.style());
+	public @NotNull TextComponent newComponent(final String content) {
+		return Component.text()
+				.decoration(TextDecoration.ITALIC, TextDecoration.State.FALSE)
+				.content(content)
+				.build();
 	}
 
 	/**
@@ -362,25 +328,17 @@ public final class ChatUtils {
 	 * @param latter The right hand side component.
 	 * @return Returns whether the two given components are equal.
 	 */
-	public static boolean areComponentsEqual(@Nullable final Component former,
-											 @Nullable final Component latter) {
+	public boolean areComponentsEqual(final Component former,
+									  final Component latter) {
 		if (Objects.equals(former, latter)) {
 			return true;
 		}
 		if (former == null || latter == null) {
 			return false;
 		}
-		if (StringUtils.equals(
+		return StringUtils.equals(
 				MiniMessage.miniMessage().serialize(former),
-				MiniMessage.miniMessage().serialize(latter))) {
-			return true;
-		}
-		if (StringUtils.equals(
-				LegacyComponentSerializer.legacyAmpersand().serialize(former),
-				LegacyComponentSerializer.legacyAmpersand().serialize(latter))) {
-			return true;
-		}
-		return false;
+				MiniMessage.miniMessage().serialize(latter));
 	}
 
 	/**
@@ -389,20 +347,14 @@ public final class ChatUtils {
 	 * @param item The item to convert.
 	 * @return Returns a valid hover event of the item, or if the item is null, a representation of that.
 	 */
-	@NotNull
-	public static HoverEvent<?> createItemHoverEvent(@org.jetbrains.annotations.Nullable final ItemStack item) {
+	public @NotNull HoverEvent<?> createItemHoverEvent(final ItemStack item) {
 		if (ItemUtils.isEmptyItem(item)) {
 			return HoverEvent.showText(Component.text()
 					.color(NamedTextColor.RED)
 					.content("<null item>")
 					.build());
 		}
-		return HoverEvent.showItem(
-				item.getType().getKey(),
-				item.getAmount()
-				// TODO: There's a variant of this method that includes an NBT compound. My guess is to include display
-				//       name and lore, perhaps also enchantments, etc..
-		);
+		return item.asHoverEvent();
 	}
 
 }
