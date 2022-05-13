@@ -2,8 +2,10 @@ package vg.civcraft.mc.civmodcore.config;
 
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -16,7 +18,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.World;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.enchantments.Enchantment;
@@ -30,6 +31,7 @@ import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
+import org.jetbrains.annotations.NotNull;
 import vg.civcraft.mc.civmodcore.inventory.items.EnchantUtils;
 import vg.civcraft.mc.civmodcore.inventory.items.ItemMap;
 import vg.civcraft.mc.civmodcore.inventory.items.MaterialUtils;
@@ -181,27 +183,9 @@ public final class ConfigHelper {
 					meta.addItemFlags(flag);
 				}
 			}
-			if (current.contains("enchants")) {
-				for (String enchantKey : current.getConfigurationSection("enchants").getKeys(false)) {
-					ConfigurationSection enchantConfig = current.getConfigurationSection("enchants")
-							.getConfigurationSection(enchantKey);
-					if (!enchantConfig.isString("enchant")) {
-						LOGGER.warning("No enchant specified for enchantment entry at " + enchantConfig.getCurrentPath()
-								+ ". Entry was ignored");
-						continue;
-					}
-					Enchantment enchant;
-					enchant = Enchantment
-							.getByKey(NamespacedKey.minecraft((enchantConfig.getString("enchant").toLowerCase())));
-					if (enchant == null) {
-						LOGGER.severe("Failed to parse enchantment " + enchantConfig.getString("enchant")
-								+ ", the entry was ignored");
-						continue;
-					}
-					int level = enchantConfig.getInt("level", 1);
-					meta.addEnchant(enchant, level, true);
-				}
-			}
+			// Enchants
+			parseEnchants(current.getConfigurationSection("enchants")).forEach(
+					(enchant, level) -> meta.addEnchant(enchant, level, true));
 			if (m == Material.LEATHER_BOOTS || m == Material.LEATHER_CHESTPLATE || m == Material.LEATHER_HELMET
 					|| m == Material.LEATHER_LEGGINGS) {
 				ConfigurationSection color = current.getConfigurationSection("color");
@@ -224,26 +208,10 @@ public final class ConfigHelper {
 					((LeatherArmorMeta) meta).setColor(leatherColor);
 				}
 			}
+			// Book Enchants
 			if (m == Material.ENCHANTED_BOOK) {
-				ConfigurationSection storedEnchantSection = current.getConfigurationSection("stored_enchants");
-				if (storedEnchantSection != null) {
-					EnchantmentStorageMeta enchantMeta = (EnchantmentStorageMeta) meta;
-					for (String sEKey : storedEnchantSection.getKeys(false)) {
-						ConfigurationSection currentStoredEnchantSection = storedEnchantSection
-								.getConfigurationSection(sEKey);
-						if (currentStoredEnchantSection != null) {
-							Enchantment enchant = EnchantUtils.getEnchantment(currentStoredEnchantSection.getString("enchant"));
-							int level = currentStoredEnchantSection.getInt("level", 1);
-							if (enchant != null) {
-								enchantMeta.addStoredEnchant(enchant, level, true);
-							}
-							else {
-								LOGGER.severe("Failed to parse enchantment at " + currentStoredEnchantSection.getCurrentPath()
-										+ ", it was not applied");
-							}
-						}
-					}
-				}
+				parseEnchants(current.getConfigurationSection("stored_enchants")).forEach(
+						(enchant, level) -> ((EnchantmentStorageMeta) meta).addStoredEnchant(enchant, level, true));
 			}
 			if (m == Material.POTION || m == Material.SPLASH_POTION || m == Material.LINGERING_POTION
 					|| m == Material.TIPPED_ARROW) {
@@ -283,6 +251,77 @@ public final class ConfigHelper {
 		toAdd.setAmount(amount);
 		im.addItemStack(toAdd);
 		return im;
+	}
+
+	/**
+	 * Parses enchants from a given config section. Supports legacy config structures.
+	 *
+	 * @param config The config section to parse enchants from.
+	 * @return Returns a map of enchants, which is never null.
+	 */
+	public @NotNull Map<Enchantment, Integer> parseEnchants(final ConfigurationSection config) {
+		if (config == null) {
+			return new HashMap<>(0);
+		}
+		final Set<String> keys = config.getKeys(false);
+		final var enchants = new HashMap<Enchantment, Integer>(keys.size());
+		for (final String key : keys) {
+			final Object value = config.get(key, null);
+			final String rawEnchant;
+			final int level;
+			// Legacy support, like so
+			//   th:
+			//     enchant: THORNS
+			//     level: 1
+			//   kb:
+			//     enchant: KNOCKBACK
+			//     level: 2
+			if (value instanceof final ConfigurationSection enchantSection) {
+				rawEnchant = enchantSection.getString("enchant", null);
+				level = enchantSection.getInt("level", 1);
+			}
+			// Modern parsing, like so
+			//   THORNS: 1
+			//   KNOCKBACK: 2
+			else {
+				rawEnchant = key;
+				if (value instanceof final Number rawLevel) {
+					level = rawLevel.intValue();
+				}
+				else if (value instanceof final String rawLevel) {
+					try {
+						level = Integer.parseInt(rawLevel);
+					}
+					catch (final NumberFormatException thrown) {
+						LOGGER.warning("Could not parse \"" + rawLevel + "\" as an enchant level for "
+								+ "\"" + rawEnchant + "\" at " + config.getCurrentPath());
+						continue;
+					}
+				}
+				// Otherwise, it's unknown
+				else {
+					LOGGER.warning("Unsupported enchant section \"" + key + "\" at " + config.getCurrentPath());
+					continue;
+				}
+			}
+			final Enchantment enchant = EnchantUtils.getEnchantment(rawEnchant);
+			if (enchant == null) {
+				LOGGER.warning("Could not match \"" + rawEnchant + "\" with an enchant at " + config.getCurrentPath());
+				continue;
+			}
+			if (level < enchant.getStartLevel() || level > enchant.getMaxLevel()) {
+				LOGGER.warning("Be aware that enchant \"" + rawEnchant + "\" is set to \"" + level + "\" even "
+						+ "though it's minimum level is \"" + enchant.getStartLevel() + "\" and its maximum level "
+						+ "level is \"" + enchant.getMaxLevel() + "\"!");
+			}
+			final Integer currentLevel = enchants.get(enchant);
+			if (currentLevel != null) {
+				LOGGER.warning("Enchant \"" + enchant + "\" is already defined at " + config.getCurrentPath() + "."
+						+ " Replacing level \"" + currentLevel + "\" with \"" + level + "\"");
+			}
+			enchants.put(enchant, level);
+		}
+		return enchants;
 	}
 
 	public static int parseTimeAsTicks(@Nonnull final String arg) {

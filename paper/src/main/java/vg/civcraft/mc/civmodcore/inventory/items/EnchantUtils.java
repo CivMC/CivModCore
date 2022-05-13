@@ -17,6 +17,8 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.translation.Translatable;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
@@ -25,7 +27,6 @@ import vg.civcraft.mc.civmodcore.CivModCorePlugin;
 import vg.civcraft.mc.civmodcore.chat.ChatUtils;
 import vg.civcraft.mc.civmodcore.utilities.CivLogger;
 import vg.civcraft.mc.civmodcore.utilities.DeprecationUtils;
-import vg.civcraft.mc.civmodcore.utilities.KeyedUtils;
 
 /**
  * Class of static utilities for Enchantments.
@@ -78,21 +79,27 @@ public final class EnchantUtils {
 	 * @param value The value to search for a matching enchantment by.
 	 * @return Returns a matched enchantment or null.
 	 */
-	@Nullable
 	@SuppressWarnings("deprecation")
-	public static Enchantment getEnchantment(@Nullable final String value) {
-		if (Strings.isNullOrEmpty(value)) {
+	public @Nullable Enchantment getEnchantment(final String value) {
+		if (StringUtils.isBlank(value)) {
 			return null;
 		}
 		Enchantment enchantment;
 		// From NamespacedKey
-		final var enchantmentKey = KeyedUtils.fromString(value);
-		if (enchantmentKey != null) {
-			enchantment = Enchantment.getByKey(enchantmentKey);
+		try {
+			NamespacedKey enchantmentKey = NamespacedKey.fromString(value);
+			if (enchantmentKey != null) {
+				enchantment = Enchantment.getByKey(enchantmentKey);
+				if (enchantment != null) {
+					return enchantment;
+				}
+			}
+			enchantment = Enchantment.getByKey(NamespacedKey.minecraft(value));
 			if (enchantment != null) {
 				return enchantment;
 			}
 		}
+		catch (final Throwable ignored) { }
 		// From Name
 		enchantment = Enchantment.getByName(value.toUpperCase()); // deprecated
 		if (enchantment != null) {
