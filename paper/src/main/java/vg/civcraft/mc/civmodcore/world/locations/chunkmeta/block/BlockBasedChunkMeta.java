@@ -357,10 +357,7 @@ public abstract class BlockBasedChunkMeta<D extends BlockDataObject<D>, S extend
 	}
 
 	public static int toChunkCoord(int coord) {
-		if (coord < 0 && (coord % 16) != 0) {
-			return (coord / 16) - 1;
-		}
-		return coord / 16;
+		return coord >> 4;
 	}
 
 }
