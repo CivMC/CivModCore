@@ -3,7 +3,9 @@ package vg.civcraft.mc.civmodcore.inventory.items;
 import com.destroystokyo.paper.MaterialTags;
 import com.google.common.math.IntMath;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import lombok.experimental.UtilityClass;
@@ -14,6 +16,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Material;
 import org.bukkit.Tag;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
 import vg.civcraft.mc.civmodcore.chat.ChatUtils;
 import vg.civcraft.mc.civmodcore.utilities.DeprecationUtils;
 
@@ -36,6 +39,16 @@ public final class MaterialUtils {
 		addAll(MaterialTags.STAINED_GLASS_PANES.getValues());
 		addAll(MaterialTags.CONCRETES.getValues());
 	}};
+
+	public final Set<Material> MATERIALS = Set.of(Material.values());
+	/**
+	 * @return Returns a new material set. DO NOT USE {@link java.util.EnumSet<Material>}! As it'll force load all
+	 * materials, including all legacy materials, forcing the server into legacy mode. For some reason
+	 * {@link Material#values()} doesn't do that... odd.
+	 */
+	public @NotNull Set<Material> getMaterials() {
+		return new HashSet<>(MATERIALS);
+	}
 
 	/**
 	 * Attempts to retrieve a material by its slug.
