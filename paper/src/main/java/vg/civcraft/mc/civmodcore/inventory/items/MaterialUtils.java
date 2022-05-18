@@ -1,13 +1,11 @@
 package vg.civcraft.mc.civmodcore.inventory.items;
 
 import com.destroystokyo.paper.MaterialTags;
+import com.google.common.collect.ImmutableList;
 import com.google.common.math.IntMath;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import lombok.experimental.UtilityClass;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TranslatableComponent;
@@ -17,6 +15,7 @@ import org.bukkit.Material;
 import org.bukkit.Tag;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import vg.civcraft.mc.civmodcore.chat.ChatUtils;
 import vg.civcraft.mc.civmodcore.utilities.DeprecationUtils;
 
@@ -31,14 +30,7 @@ import vg.civcraft.mc.civmodcore.utilities.DeprecationUtils;
  * </ul>
  */
 @UtilityClass
-public final class MaterialUtils {
-
-	private static final List<Material> HASH_MATERIALS = new ArrayList<>() {{
-		addAll(Tag.WOOL.getValues());
-		addAll(MaterialTags.STAINED_GLASS.getValues());
-		addAll(MaterialTags.STAINED_GLASS_PANES.getValues());
-		addAll(MaterialTags.CONCRETES.getValues());
-	}};
+public class MaterialUtils {
 
 	public final Set<Material> MATERIALS = Set.of(Material.values());
 	/**
@@ -56,8 +48,7 @@ public final class MaterialUtils {
 	 * @param value The value to search for a matching material by.
 	 * @return Returns a matched material or null.
 	 */
-	@Nullable
-	public static Material getMaterial(@Nullable final String value) {
+	public @Nullable Material getMaterial(final String value) {
 		return StringUtils.isEmpty(value) ? null : Material.getMaterial(value.toUpperCase());
 	}
 
@@ -71,8 +62,7 @@ public final class MaterialUtils {
 	 * @deprecated Use {@link ChatUtils#asTranslatable(Translatable)} instead.
 	 */
 	@Deprecated
-	@Nonnull
-	public static TranslatableComponent asTranslatable(@Nonnull final Material material) {
+	public @NotNull TranslatableComponent asTranslatable(@NotNull final Material material) {
 		DeprecationUtils.printDeprecationWarning();
 		return Component.translatable(material.translationKey());
 	}
@@ -84,18 +74,23 @@ public final class MaterialUtils {
 	 * @param material The material to check.
 	 * @return Returns true if the material is air.
 	 */
-	public static boolean isAir(@Nullable final Material material) {
+	public boolean isAir(@Nullable final Material material) {
 		return material == null || material.isAir();
 	}
 
+	private final List<Material> HASH_MATERIALS = ImmutableList.<Material>builder()
+			.addAll(Tag.WOOL.getValues())
+			.addAll(MaterialTags.STAINED_GLASS.getValues())
+			.addAll(MaterialTags.STAINED_GLASS_PANES.getValues())
+			.addAll(MaterialTags.CONCRETES.getValues())
+			.build();
 	/**
 	 * Gets a random material based on the given objects hashcode.
 	 *
 	 * @param object Object to base returned material on
 	 * @return Material hash of the given object
 	 */
-	@Nonnull
-	public static Material getMaterialHash(@Nullable final Object object) {
+	public @NotNull Material getMaterialHash(final Object object) {
 		if (object == null) {
 			return HASH_MATERIALS.get(0);
 		}
