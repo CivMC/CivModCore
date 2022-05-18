@@ -1,10 +1,12 @@
 package vg.civcraft.mc.civmodcore.utilities;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import lombok.experimental.UtilityClass;
+import org.apache.commons.collections4.IterableUtils;
 import org.apache.commons.lang3.ArrayUtils;
 
 /**
@@ -13,7 +15,7 @@ import org.apache.commons.lang3.ArrayUtils;
  * @author Protonull
  */
 @UtilityClass
-public final class MoreArrayUtils {
+public class MoreArrayUtils {
 
 	/**
 	 * Fills an array with a particular value.
@@ -23,11 +25,11 @@ public final class MoreArrayUtils {
 	 * @param value The value to fill the array with.
 	 * @return Returns the given array with the filled values.
 	 */
-	public static <T> T[] fill(final T[] array, final T value) {
-		if (ArrayUtils.isEmpty(array)) {
-			return array;
+	public <T> T[] fill(final T[] array,
+						final T value) {
+		if (ArrayUtils.isNotEmpty(array)) {
+			Arrays.fill(array, value);
 		}
-		Arrays.fill(array, value);
 		return array;
 	}
 
@@ -41,21 +43,15 @@ public final class MoreArrayUtils {
 	 * @param array The array to iterate.
 	 * @param predicate The element tester.
 	 * @return Returns true if at least one element passes the predicate test. Or false if the array fails the
-	 * {@link ArrayUtils#isEmpty(Object[]) isNullOrEmpty()} test, or true if the give predicate is null.
+	 *         {@link ArrayUtils#isEmpty(Object[]) isNullOrEmpty()} test, or true if the give predicate is null.
+	 *
+	 * @deprecated Use {@link IterableUtils#matchesAny(Iterable, org.apache.commons.collections4.Predicate)} instead.
 	 */
-	public static <T> boolean anyMatch(final T[] array, final Predicate<T> predicate) {
-		if (ArrayUtils.isEmpty(array)) {
-			return false;
-		}
-		if (predicate == null) {
-			return true;
-		}
-		for (final T element : array) {
-			if (predicate.test(element)) {
-				return true;
-			}
-		}
-		return false;
+	@Deprecated
+	public <T> boolean anyMatch(final T[] array,
+								final Predicate<T> predicate) {
+		DeprecationUtils.printDeprecationWarning();
+		return predicate != null && IterableUtils.matchesAny(List.of(array), predicate::test);
 	}
 
 	/**
@@ -67,21 +63,29 @@ public final class MoreArrayUtils {
 	 * @param array The array to iterate.
 	 * @param predicate The element tester.
 	 * @return Returns true if no element fails the predicate test, or if the array fails the
-	 * {@link ArrayUtils#isEmpty(Object[]) isNullOrEmpty()} test, or if the give predicate is null.
+	 *         {@link ArrayUtils#isEmpty(Object[]) isNullOrEmpty()} test, or if the give predicate is null.
+	 *
+	 * @deprecated Use {@link IterableUtils#matchesAll(Iterable, org.apache.commons.collections4.Predicate)} instead.
 	 */
-	public static <T> boolean allMatch(final T[] array, final Predicate<T> predicate) {
-		if (ArrayUtils.isEmpty(array)) {
-			return true;
-		}
-		if (predicate == null) {
-			return true;
-		}
-		for (final T element : array) {
-			if (!predicate.test(element)) {
-				return false;
-			}
-		}
-		return true;
+	@Deprecated
+	public <T> boolean allMatch(final T[] array,
+								final Predicate<T> predicate) {
+		DeprecationUtils.printDeprecationWarning();
+		return predicate != null && IterableUtils.matchesAll(List.of(array), predicate::test);
+	}
+
+	/**
+	 * Determines whether a given index is safe for a given collection.
+	 *
+	 * @param <T> The type of the array's elements.
+	 * @param array The array to test the index for.
+	 * @param index The index to test.
+	 * @return Returns true if the given index represents a valid index for the array; that a returned false would
+	 *         necessarily imply a {@link IndexOutOfBoundsException} (or similar) if attempted.
+	 */
+	public <T> boolean isSafeIndex(final T[] array,
+								   final int index) {
+		return array != null && index >= 0 && index < array.length;
 	}
 
 	/**
@@ -93,11 +97,9 @@ public final class MoreArrayUtils {
 	 * @param index The index of the element.
 	 * @return Returns the element, or null.
 	 */
-	public static <T> T getElement(final T[] array, final int index) {
-		if (ArrayUtils.isEmpty(array) || index < 0 || index >= array.length) {
-			return null;
-		}
-		return array[index];
+	public <T> T getElement(final T[] array,
+							final int index) {
+		return isSafeIndex(array, index) ? null : array[index];
 	}
 
 	/**
@@ -108,7 +110,7 @@ public final class MoreArrayUtils {
 	 * @return Returns a random element, or null.
 	 */
 	@SafeVarargs
-	public static <T> T randomElement(final T... array) {
+	public <T> T randomElement(final T... array) {
 		if (ArrayUtils.isEmpty(array)) {
 			return null;
 		}
@@ -125,12 +127,12 @@ public final class MoreArrayUtils {
 	 * @param array The array to compute the elements of.
 	 * @param mapper The compute function itself.
 	 */
-	public static <T> void computeElements(final T[] array, final Function<T, T> mapper) {
-		if (ArrayUtils.isEmpty(array) || mapper == null) {
-			return;
-		}
-		for (int i = 0, l = array.length; i < l; i++) {
-			array[i] = mapper.apply(array[i]);
+	public <T> void computeElements(final T[] array,
+									final Function<T, T> mapper) {
+		if (ArrayUtils.isNotEmpty(array) && mapper != null) {
+			for (int i = 0, l = array.length; i < l; i++) {
+				array[i] = mapper.apply(array[i]);
+			}
 		}
 	}
 
@@ -141,18 +143,14 @@ public final class MoreArrayUtils {
 	 * @param array The array to match the elements of.
 	 * @param matcher The matcher function itself.
 	 * @return Returns the number of elements that match.
+	 *
+	 * @deprecated Use {@link IterableUtils#countMatches(Iterable, org.apache.commons.collections4.Predicate)} instead.
 	 */
-	public static <T> int numberOfMatches(final T[] array, final Predicate<T> matcher) {
-		if (ArrayUtils.isEmpty(array) || matcher == null) {
-			return 0;
-		}
-		int counter = 0;
-		for (final T element : array) {
-			if (matcher.test(element)) {
-				counter++;
-			}
-		}
-		return counter;
+	@Deprecated
+	public <T> int numberOfMatches(final T[] array,
+								   final Predicate<T> matcher) {
+		DeprecationUtils.printDeprecationWarning();
+		return matcher == null ? 0 : (int) IterableUtils.countMatches(List.of(array), matcher::test);
 	}
 
 }
