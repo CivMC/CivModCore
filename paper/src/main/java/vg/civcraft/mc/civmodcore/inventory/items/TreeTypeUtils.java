@@ -1,20 +1,20 @@
 package vg.civcraft.mc.civmodcore.inventory.items;
 
 import com.google.common.collect.ImmutableMap;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import lombok.experimental.UtilityClass;
-import org.apache.commons.collections4.CollectionUtils;
 import org.bukkit.Material;
 import org.bukkit.TreeType;
+import org.jetbrains.annotations.Nullable;
 import vg.civcraft.mc.civmodcore.utilities.CivLogger;
+import vg.civcraft.mc.civmodcore.utilities.MoreEnumUtils;
 
 @UtilityClass
-public final class TreeTypeUtils {
+public class TreeTypeUtils {
 
-	private static final Map<Material, TreeType> TREE_MATERIALS = ImmutableMap.<Material, TreeType>builder()
+	private final Map<Material, TreeType> TREE_MATERIALS = ImmutableMap.<Material, TreeType>builder()
 			// Acacia
 			.put(Material.ACACIA_SAPLING, TreeType.ACACIA)
 			.put(Material.ACACIA_WOOD, TreeType.ACACIA)
@@ -74,13 +74,13 @@ public final class TreeTypeUtils {
 			// Crimson Fungus
 			.put(Material.WARPED_FUNGUS, TreeType.WARPED_FUNGUS)
 			.put(Material.WARPED_STEM, TreeType.CRIMSON_FUNGUS)
-			//Azalea
+			// Azalea
 			.put(Material.FLOWERING_AZALEA, TreeType.AZALEA)
 			.put(Material.AZALEA_LEAVES, TreeType.AZALEA)
 			.put(Material.FLOWERING_AZALEA_LEAVES, TreeType.AZALEA)
 			.build();
 
-	private static final Map<TreeType, Material> SAPLING_MATERIALS = ImmutableMap.<TreeType, Material>builder()
+	private final Map<TreeType, Material> SAPLING_MATERIALS = ImmutableMap.<TreeType, Material>builder()
 			// Acacia
 			.put(TreeType.ACACIA, Material.ACACIA_SAPLING)
 			// Birch
@@ -116,39 +116,35 @@ public final class TreeTypeUtils {
 			.put(TreeType.AZALEA, Material.FLOWERING_AZALEA)
 			.build();
 
-	public static void init() {
+	public void init() {
 		final var logger = CivLogger.getLogger(TreeTypeUtils.class);
 		// Determine if there's any tree types missing
 		{
-			final Set<TreeType> missing = new HashSet<>();
+			final Set<TreeType> missing = EnumSet.allOf(TreeType.class);
 			final Set<TreeType> exclude = Set.of( // Set of TreeTypes that cannot be reverse searched
 					TreeType.BIG_TREE, TreeType.JUNGLE_BUSH, TreeType.SWAMP, TreeType.SMALL_JUNGLE,
 					TreeType.TALL_BIRCH, TreeType.MEGA_REDWOOD, TreeType.TALL_REDWOOD);
-			CollectionUtils.addAll(missing, TreeType.values());
-			missing.removeIf(type -> exclude.contains(type) || TREE_MATERIALS.containsValue(type));
+			missing.removeIf((type) -> exclude.contains(type) || TREE_MATERIALS.containsValue(type));
 			if (!missing.isEmpty()) {
-				logger.warning("The following tree types are missing: " +
-						missing.stream().map(Enum::name).collect(Collectors.joining(",")) + ".");
+				logger.warning("The following tree types are missing: " + MoreEnumUtils.join(missing) + ".");
 			}
 		}
 		// Determine if there's any sapling types missing
 		{
-			final Set<TreeType> missing = new HashSet<>();
-			CollectionUtils.addAll(missing, TreeType.values());
+			final Set<TreeType> missing = EnumSet.allOf(TreeType.class);
 			missing.removeIf(SAPLING_MATERIALS::containsKey);
 			if (!missing.isEmpty()) {
-				logger.warning("The following sapling types are missing: " +
-						missing.stream().map(Enum::name).collect(Collectors.joining(",")) + ".");
+				logger.warning("The following sapling types are missing: " + MoreEnumUtils.join(missing) + ".");
 			}
 		}
 	}
 
-	public static TreeType getMatchingTreeType(final Material material) {
-		return TREE_MATERIALS.get(material);
+	public @Nullable TreeType getMatchingTreeType(final Material material) {
+		return material == null ? null : TREE_MATERIALS.get(material);
 	}
 	
-	public static Material getMatchingSapling(final TreeType type) {
-		return SAPLING_MATERIALS.get(type);
+	public @Nullable Material getMatchingSapling(final TreeType type) {
+		return type == null ? null : SAPLING_MATERIALS.get(type);
 	}
 
 }
