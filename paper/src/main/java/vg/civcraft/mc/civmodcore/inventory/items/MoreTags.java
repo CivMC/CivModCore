@@ -13,6 +13,7 @@ import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Tag;
 import org.bukkit.block.data.Ageable;
+import org.bukkit.inventory.meta.LeatherArmorMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import vg.civcraft.mc.civmodcore.utilities.CivLogger;
@@ -277,6 +278,29 @@ public class MoreTags {
 					.add(Material.LAVA)
 					.add(Material.WATER)
 					.build());
+
+	/**
+	 * This is a set of all materials that'll create items with {@link LeatherArmorMeta}.
+	 */
+	public final Tag<Material> LEATHERS = new BetterTag<>("leathers",
+			ImmutableSet.<Material>builder()
+					.add(Material.LEATHER_HELMET)
+					.add(Material.LEATHER_CHESTPLATE)
+					.add(Material.LEATHER_LEGGINGS)
+					.add(Material.LEATHER_BOOTS)
+					.add(Material.LEATHER_HORSE_ARMOR)
+					.build()) {
+		@Override
+		protected void testTag() {
+			final Set<Material> missing = MaterialUtils.getMaterials();
+			missing.removeIf((material) -> !ItemUtils.isValidItemMaterial(material)
+					|| !(Bukkit.getItemFactory().getItemMeta(material) instanceof LeatherArmorMeta)
+					|| isTagged(material));
+			if (!missing.isEmpty()) {
+				LOGGER.warning("The following leathers are missing: " + MoreEnumUtils.join(missing) + ".");
+			}
+		}
+	};
 
 	// ------------------------------------------------------------
 	// Better Tag class to allow for easy Tag creation.
