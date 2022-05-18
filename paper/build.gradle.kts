@@ -3,7 +3,7 @@ val pluginName: String by project
 plugins {
 	`java-library`
 	id("io.papermc.paperweight.userdev") version "1.3.6"
-	id("com.github.johnrengelman.shadow") version "7.1.0"
+	id("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
 dependencies {
