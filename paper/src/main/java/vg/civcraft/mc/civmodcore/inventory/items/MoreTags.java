@@ -2,33 +2,34 @@ package vg.civcraft.mc.civmodcore.inventory.items;
 
 import com.destroystokyo.paper.MaterialTags;
 import com.google.common.collect.ImmutableSet;
-import java.util.HashSet;
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.Set;
-import java.util.stream.Collectors;
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import java.util.logging.Level;
 import lombok.experimental.UtilityClass;
-import org.apache.commons.collections4.CollectionUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Keyed;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.Tag;
 import org.bukkit.block.data.Ageable;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import vg.civcraft.mc.civmodcore.utilities.CivLogger;
 import vg.civcraft.mc.civmodcore.utilities.KeyedUtils;
+import vg.civcraft.mc.civmodcore.utilities.MoreEnumUtils;
 
 /**
  * Fills in the gaps between {@link Tag} and {@link MaterialTags}.
  */
 @UtilityClass
-public final class MoreTags {
+public class MoreTags {
 
 	/**
 	 * This differs from {@link Tag#LOGS} as that includes every type of wood,
 	 * including stripped logs and all planks.
 	 */
-	public static final Tag<Material> LOGS = new BetterTag<>("logs",
+	public final Tag<Material> LOGS = new BetterTag<>("logs",
 			ImmutableSet.<Material>builder()
 					.add(Material.ACACIA_LOG)
 					.add(Material.BIRCH_LOG)
@@ -38,7 +39,7 @@ public final class MoreTags {
 					.add(Material.SPRUCE_LOG)
 					.build());
 	
-	public static final Tag<Material> STRIPPED_LOGS = new BetterTag<>("stripped_logs",
+	public final Tag<Material> STRIPPED_LOGS = new BetterTag<>("stripped_logs",
 			ImmutableSet.<Material>builder()
 					.add(Material.STRIPPED_ACACIA_LOG)
 					.add(Material.STRIPPED_BIRCH_LOG)
@@ -48,7 +49,7 @@ public final class MoreTags {
 					.add(Material.STRIPPED_SPRUCE_LOG)
 					.build());
 
-	public static final Tag<Material> STRIPPED_PLANKS = new BetterTag<>("stripped_planks",
+	public final Tag<Material> STRIPPED_PLANKS = new BetterTag<>("stripped_planks",
 			ImmutableSet.<Material>builder()
 					.add(Material.STRIPPED_ACACIA_WOOD)
 					.add(Material.STRIPPED_BIRCH_WOOD)
@@ -58,13 +59,13 @@ public final class MoreTags {
 					.add(Material.STRIPPED_SPRUCE_WOOD)
 					.build());
 
-	public static final Tag<Material> STRIPPED_ALL = new BetterTag<>("stripped_all",
+	public final Tag<Material> STRIPPED_ALL = new BetterTag<>("stripped_all",
 			ImmutableSet.<Material>builder()
 					.addAll(STRIPPED_LOGS.getValues())
 					.addAll(STRIPPED_PLANKS.getValues())
 					.build());
 
-	public static final Tag<Material> DIRT = new BetterTag<>("dirt",
+	public final Tag<Material> DIRT = new BetterTag<>("dirt",
 			ImmutableSet.<Material>builder()
 					.add(Material.FARMLAND)
 					.add(Material.DIRT_PATH)
@@ -74,7 +75,7 @@ public final class MoreTags {
 					.add(Material.PODZOL)
 					.build());
 
-	public static final Tag<Material> POTIONS = new BetterTag<>("potion",
+	public final Tag<Material> POTIONS = new BetterTag<>("potion",
 			ImmutableSet.<Material>builder()
 					.add(Material.POTION)
 					.add(Material.SPLASH_POTION)
@@ -84,7 +85,7 @@ public final class MoreTags {
 	/**
 	 * Materials of items that can apply potion effects.
 	 */
-	public static final Tag<Material> EFFECTORS = new BetterTag<>("effectors",
+	public final Tag<Material> EFFECTORS = new BetterTag<>("effectors",
 			ImmutableSet.<Material>builder()
 					.addAll(POTIONS.getValues())
 					.add(Material.TIPPED_ARROW)
@@ -94,7 +95,7 @@ public final class MoreTags {
 	 * This is necessary as {@link Tag#CROPS} is crap and only has a few crops, and {@link Ageable} includes none-crop
 	 * blocks like {@link Material#FIRE fire} and {@link Material#FROSTED_ICE frosted ice}.
 	 */
-	public static final Tag<Material> CROPS = new BetterTag<>("crops",
+	public final Tag<Material> CROPS = new BetterTag<>("crops",
 			ImmutableSet.<Material>builder()
 					.add(Material.BAMBOO)
 					.add(Material.BAMBOO_SAPLING)
@@ -115,9 +116,22 @@ public final class MoreTags {
 					.add(Material.WEEPING_VINES)
 					.add(Material.WHEAT)
 					.add(Material.CAVE_VINES)
-					.build());
+					.build()) {
+		@Override
+		protected void testTag() {
+			final Set<Material> missing = MaterialUtils.getMaterials();
+			missing.removeIf((material) -> !material.isBlock() // Do this first to reduce amount of block data created
+					|| !(Bukkit.createBlockData(material) instanceof Ageable)
+					|| Tag.ICE.isTagged(material)
+					|| Tag.FIRE.isTagged(material)
+					|| CROPS.isTagged(material));
+			if (!missing.isEmpty()) {
+				LOGGER.warning("The following crops are missing: " + MoreEnumUtils.join(missing) + ".");
+			}
+		}
+	};
 
-	public static final Tag<Material> POTTABLE = new BetterTag<>("pottable",
+	public final Tag<Material> POTTABLE = new BetterTag<>("pottable",
 			ImmutableSet.<Material>builder()
 					.add(Material.ACACIA_SAPLING)
 					.add(Material.ALLIUM)
@@ -150,7 +164,7 @@ public final class MoreTags {
 					.add(Material.WITHER_ROSE)
 					.build());
 
-	public static final Tag<Material> NETHERITE_ARMOUR = new BetterTag<>("netherite_armour",
+	public final Tag<Material> NETHERITE_ARMOUR = new BetterTag<>("netherite_armour",
 			ImmutableSet.<Material>builder()
 					.add(Material.NETHERITE_HELMET)
 					.add(Material.NETHERITE_CHESTPLATE)
@@ -163,7 +177,7 @@ public final class MoreTags {
 	 * similar checks for handheld usable items, and best to support that and not be awkward for the sake of
 	 * technical correctness.
 	 */
-	public static final Tag<Material> NETHERITE_TOOLS = new BetterTag<>("netherite_tools",
+	public final Tag<Material> NETHERITE_TOOLS = new BetterTag<>("netherite_tools",
 			ImmutableSet.<Material>builder()
 					.add(Material.NETHERITE_SWORD)
 					.add(Material.NETHERITE_PICKAXE)
@@ -172,7 +186,7 @@ public final class MoreTags {
 					.add(Material.NETHERITE_HOE)
 					.build());
 
-	public static final Tag<Material> NETHERITE_ITEMS = new BetterTag<>("netherite_items",
+	public final Tag<Material> NETHERITE_ITEMS = new BetterTag<>("netherite_items",
 			ImmutableSet.<Material>builder()
 					.addAll(NETHERITE_ARMOUR.getValues())
 					.addAll(NETHERITE_TOOLS.getValues())
@@ -181,7 +195,7 @@ public final class MoreTags {
 					.add(Material.NETHERITE_SCRAP)
 					.build());
 
-	public static final Tag<Material> LIGHTABLE_CANDLES = new BetterTag<>("lightable_candles",
+	public final Tag<Material> LIGHTABLE_CANDLES = new BetterTag<>("lightable_candles",
 			ImmutableSet.<Material>builder()
 					.add(Material.CANDLE)
 					.add(Material.CANDLE_CAKE)
@@ -219,7 +233,7 @@ public final class MoreTags {
 					.add(Material.YELLOW_CANDLE_CAKE)
 					.build());
 
-	public static final Tag<Material> COPPER_BLOCKS = new BetterTag<>("copper_blocks",
+	public final Tag<Material> COPPER_BLOCKS = new BetterTag<>("copper_blocks",
 			ImmutableSet.<Material>builder()
 					.add(Material.COPPER_BLOCK)
 					.add(Material.EXPOSED_COPPER)
@@ -258,7 +272,7 @@ public final class MoreTags {
 	/**
 	 * This is referring to materials that can exist in the world as blocks.
 	 */
-	public static final Tag<Material> LIQUID_BLOCKS = new BetterTag<>("liquid_blocks",
+	public final Tag<Material> LIQUID_BLOCKS = new BetterTag<>("liquid_blocks",
 			ImmutableSet.<Material>builder()
 					.add(Material.LAVA)
 					.add(Material.WATER)
@@ -271,29 +285,31 @@ public final class MoreTags {
 	private static class BetterTag<T extends Keyed> implements Tag<T> {
 
 		private final NamespacedKey key;
-
 		private final Set<T> values;
 
-		private BetterTag(final String key, final Set<T> values) {
+		private BetterTag(final @NotNull String key,
+						  final @NotNull Set<T> values) {
 			this.key = KeyedUtils.fromParts("civmodcore", key);
 			this.values = values;
 		}
 
 		@Override
-		public boolean isTagged(@Nullable T value) {
+		public boolean isTagged(final @Nullable T value) {
 			return this.values.contains(value);
 		}
 
-		@Nonnull
 		@Override
-		public Set<T> getValues() {
+		public @NotNull Set<T> getValues() {
 			return this.values;
 		}
 
-		@Nonnull
 		@Override
-		public NamespacedKey getKey() {
+		public @NotNull NamespacedKey getKey() {
 			return this.key;
+		}
+
+		protected void testTag() {
+
 		}
 
 	}
@@ -302,20 +318,41 @@ public final class MoreTags {
 	// Initialise and check MoreTags
 	// ------------------------------------------------------------
 
-	public static void init() {
-		final var logger = CivLogger.getLogger(MoreTags.class);
-		// Determine if there's any crops missing
-		{
-			final Set<Material> missing = new HashSet<>();
-			CollectionUtils.addAll(missing, Material.values());
-			CollectionUtils.filter(missing, Material::isBlock); // Do this first to reduce amount of block data created
-			CollectionUtils.filter(missing, material -> Bukkit.createBlockData(material) instanceof Ageable);
-			missing.removeIf(Tag.ICE::isTagged);
-			missing.removeIf(Tag.FIRE::isTagged);
-			missing.removeIf(CROPS::isTagged);
-			if (!missing.isEmpty()) {
-				logger.warning("The following crops are missing: " +
-						missing.stream().map(Material::name).collect(Collectors.joining(",")) + ".");
+	private static final CivLogger LOGGER = CivLogger.getLogger(MoreTags.class);
+
+	public void init() {
+		LOGGER.info("Initialising " + MoreTags.class.getSimpleName());
+		for (final Field field : MoreTags.class.getFields()) {
+			if (!Modifier.isStatic(field.getModifiers())
+					|| !Modifier.isPublic(field.getModifiers())
+					|| !Tag.class.isAssignableFrom(field.getType())) {
+				continue;
+			}
+			final Object tag;
+			try {
+				tag = field.get(null);
+			}
+			catch (final IllegalAccessException thrown) {
+				LOGGER.log(Level.WARNING,
+						"Could not get the value of BetterTag[" + field.getName() + "]",
+						thrown);
+				continue;
+			}
+			if (tag == null) {
+				LOGGER.warning("Tag[" + field.getName() + "] was null... bad!");
+				continue;
+			}
+			if (!BetterTag.class.isAssignableFrom(tag.getClass())) {
+				LOGGER.warning("Tag[" + field.getName() + "] is not a " + BetterTag.class.getSimpleName() + "!");
+				continue;
+			}
+			try {
+				((BetterTag<?>) tag).testTag();
+			}
+			catch (final Throwable thrown) {
+				LOGGER.log(Level.SEVERE,
+						"Could not finish test for \"" + field.getName() + "\"",
+						thrown);
 			}
 		}
 	}
