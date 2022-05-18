@@ -1,24 +1,24 @@
 package vg.civcraft.mc.civmodcore.inventory.items;
 
+import com.destroystokyo.paper.MaterialTags;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.ImmutableBiMap;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import lombok.experimental.UtilityClass;
-import org.apache.commons.collections4.CollectionUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.EntityType;
 import vg.civcraft.mc.civmodcore.utilities.CivLogger;
+import vg.civcraft.mc.civmodcore.utilities.MoreEnumUtils;
 
 /**
  * Class of static APIs for Spawn Eggs.
  */
 @UtilityClass
-public final class SpawnEggUtils {
+public class SpawnEggUtils {
 
-	private static final BiMap<Material, EntityType> SPAWN_EGGS = ImmutableBiMap.<Material, EntityType>builder()
+	private final BiMap<Material, EntityType> SPAWN_EGGS = ImmutableBiMap.<Material, EntityType>builder()
 			.put(Material.AXOLOTL_SPAWN_EGG, EntityType.AXOLOTL)
 			.put(Material.BAT_SPAWN_EGG, EntityType.BAT)
 			.put(Material.BEE_SPAWN_EGG, EntityType.BEE)
@@ -88,15 +88,13 @@ public final class SpawnEggUtils {
 			.put(Material.ZOMBIE_VILLAGER_SPAWN_EGG, EntityType.ZOMBIE_VILLAGER)
 			.build();
 
-	public static void init() {
+	public void init() {
 		final var logger = CivLogger.getLogger(SpawnEggUtils.class);
 		// Determine if there's any enchants missing names
-		final Set<Material> missing = new HashSet<>();
-		CollectionUtils.addAll(missing, Material.values());
-		missing.removeIf(material -> !material.name().endsWith("_SPAWN_EGG") || SPAWN_EGGS.containsKey(material));
+		final Set<Material> missing = MaterialUtils.getMaterials();
+		missing.removeIf((material) -> !MaterialTags.SPAWN_EGGS.isTagged(material) || SPAWN_EGGS.containsKey(material));
 		if (!missing.isEmpty()) {
-			logger.warning("The following spawn eggs are missing: " +
-					missing.stream().map(Enum::name).collect(Collectors.joining(",")) + ".");
+			logger.warning("The following spawn eggs are missing: " + MoreEnumUtils.join(missing) + ".");
 		}
 	}
 
@@ -106,11 +104,8 @@ public final class SpawnEggUtils {
 	 * @param material The material to test.
 	 * @return Returns true if the material is that of a spawn egg.
 	 */
-	public static boolean isSpawnEgg(final Material material) {
-		if (material == null) {
-			return false;
-		}
-		return SPAWN_EGGS.containsKey(material);
+	public boolean isSpawnEgg(final Material material) {
+		return material != null && SPAWN_EGGS.containsKey(material);
 	}
 
 	/**
@@ -119,12 +114,8 @@ public final class SpawnEggUtils {
 	 * @param material The material, must be a spawn egg otherwise it's a guaranteed null.
 	 * @return Returns the entity type that will be spawned from the spawn egg, or null.
 	 */
-	@Nullable
-	public static EntityType getEntityType(final Material material) {
-		if (material == null) {
-			return null;
-		}
-		return SPAWN_EGGS.get(material);
+	public @Nullable EntityType getEntityType(final Material material) {
+		return material == null ? null : SPAWN_EGGS.get(material);
 	}
 
 	/**
@@ -133,12 +124,8 @@ public final class SpawnEggUtils {
 	 * @param type The type of entity to match to the spawn egg.
 	 * @return Returns a spawn egg material, or null.
 	 */
-	@Nullable
-	public static Material getSpawnEgg(final EntityType type) {
-		if (type == null) {
-			return null;
-		}
-		return SPAWN_EGGS.inverse().get(type);
+	public @Nullable Material getSpawnEgg(final EntityType type) {
+		return type == null ? null : SPAWN_EGGS.inverse().get(type);
 	}
 
 }
