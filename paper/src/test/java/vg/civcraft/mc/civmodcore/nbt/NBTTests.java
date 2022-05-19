@@ -116,8 +116,8 @@ public class NBTTests {
 				123.456d, 789.654d, 321.098d,
 				1.12344f, 123.234f);
 		// Process
-		final var nbt = NBTHelper.locationToNBT(location);
-		final var parsed = NBTHelper.locationFromNBT(nbt);
+		final CompoundTag nbt = NBTHelper.LOCATION.serialize(location);
+		final Location parsed = NBTHelper.LOCATION.deserialize(nbt);
 		// Check
 		Assertions.assertEquals(location, parsed);
 	}
@@ -133,8 +133,8 @@ public class NBTTests {
 			return true;
 		});
 		// Process
-		final var nbt = NBTHelper.itemStackToNBT(item);
-		final var parsed = NBTHelper.itemStackFromNBT(nbt);
+		final CompoundTag nbt = NBTHelper.ITEMSTACK.serialize(item);
+		final ItemStack parsed = NBTHelper.ITEMSTACK.deserialize(nbt);
 		// Check
 		Assertions.assertEquals(item, parsed);
 	}
