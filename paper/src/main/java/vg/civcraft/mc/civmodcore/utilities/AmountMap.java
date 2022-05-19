@@ -22,7 +22,20 @@ public interface AmountMap<T> extends Object2IntMap<T> {
 	 * Removes "empties", ie: keys with non-positive amounts.
 	 */
 	default void removeEmpties() {
-		values().removeIf((final int amount) -> amount <= 0);
+		values().removeIf((final int amount) -> amount < 1);
+	}
+
+	/**
+	 * @return Returns the total amount of things stored in this map.
+	 */
+	default int getTotalAmount() {
+		int amount = 0;
+		for (final int currentAmount : values()) {
+			if (currentAmount > 0) {
+				amount += currentAmount;
+			}
+		}
+		return amount;
 	}
 
 	/**
