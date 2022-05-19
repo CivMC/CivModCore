@@ -20,12 +20,16 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitTask;
+import vg.civcraft.mc.civmodcore.utilities.DeprecationUtils;
 
 /**
  * @author caucow ( https://github.com/caucow )
+ *
+ * @deprecated Use {@link vg.civcraft.mc.civmodcore.utilities.SkinCache} instead.
  */
 // Maybe some day this class can be made more generic and accept an ExecutorService in a constructor or something.
 // For now it works. Ree.
+@Deprecated(forRemoval = true)
 public class SkinCache {
 
 	private final Plugin plugin;
@@ -55,6 +59,7 @@ public class SkinCache {
 	 * @param downloadThreads Number of threads to use to handle async loading.
 	 */
 	public SkinCache(Plugin plugin, int downloadThreads) {
+		DeprecationUtils.printDeprecationWarning();
 		this.plugin = plugin;
 
 		this.skinCache = CacheBuilder.newBuilder()
