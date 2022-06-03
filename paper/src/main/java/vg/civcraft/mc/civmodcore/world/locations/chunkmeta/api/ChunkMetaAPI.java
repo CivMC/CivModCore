@@ -98,7 +98,7 @@ public class ChunkMetaAPI {
 		return view;
 	}
 
-	static void removePlugin(JavaPlugin plugin) {
+	public static void removePlugin(JavaPlugin plugin) {
 		existingViews.remove(plugin.getName());
 	}
 
