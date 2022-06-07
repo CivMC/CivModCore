@@ -30,9 +30,15 @@ import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
+import org.jetbrains.annotations.NotNull;
+import vg.civcraft.mc.civmodcore.ACivMod;
+import vg.civcraft.mc.civmodcore.dao.DefaultDatasource;
+import vg.civcraft.mc.civmodcore.dao.DatabaseCredentials;
+import vg.civcraft.mc.civmodcore.dao.ManagedDatasource;
 import vg.civcraft.mc.civmodcore.inventory.items.EnchantUtils;
 import vg.civcraft.mc.civmodcore.inventory.items.ItemMap;
 import vg.civcraft.mc.civmodcore.inventory.items.MaterialUtils;
+import vg.civcraft.mc.civmodcore.utilities.CivLogger;
 import vg.civcraft.mc.civmodcore.world.model.EllipseArea;
 import vg.civcraft.mc.civmodcore.world.model.GlobalYLimitedArea;
 import vg.civcraft.mc.civmodcore.world.model.IArea;
@@ -42,6 +48,38 @@ import vg.civcraft.mc.civmodcore.world.model.RectangleArea;
 public final class ConfigHelper {
 
 	private static final Logger LOGGER = Bukkit.getLogger();
+
+	/**
+	 * Attempts to retrieve a ManagedDatasource (aka a database connection) from the config at a given key.
+	 *
+	 * @param config The configuration section to get the ManagedDatasource from.
+	 * @param key The key of the ManagedDatasource.
+	 * @param plugin The owning plugin of the ManagedDatasource.
+	 * @return Returns a new ManagedDatasource if found, null otherwise.
+	 */
+	public @Nullable ManagedDatasource getManagedDatasource(final @NotNull ConfigurationSection config,
+															final @NotNull String key,
+															final @NotNull ACivMod plugin) {
+		final Object value = config.get(key, null);
+		if (value instanceof final DatabaseCredentials credentials) {
+			return ManagedDatasource.construct(plugin, credentials);
+		}
+		if (value instanceof final DefaultDatasource connection) {
+			return connection.getManagedDatasource();
+		}
+		if (value instanceof final ConfigurationSection section) {
+			final var logger = CivLogger.getLogger(plugin.getClass(), ConfigHelper.class);
+			logger.warning("Deprecated database definition at [" + config.getCurrentPath() + "." + key + "]");
+			final DatabaseCredentials credentials = DatabaseCredentials.deserialize(section.getValues(false));
+			if (credentials == null) {
+				logger.warning("Deprecated database definition at [" + config.getCurrentPath() + "." + key + "] "
+						+ "could not be deserialized into a " + DatabaseCredentials.class.getSimpleName() + " instance!");
+				return null;
+			}
+			return ManagedDatasource.construct(plugin, credentials);
+		}
+		return null;
+	}
 
 	/**
 	 * Retrieves the configuration section at the given key on the given configuration section.

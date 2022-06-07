@@ -7,6 +7,7 @@ import org.bukkit.entity.HumanEntity;
 import org.ipvp.canvas.MenuFunctionListener;
 import vg.civcraft.mc.civmodcore.chat.dialog.DialogManager;
 import vg.civcraft.mc.civmodcore.commands.CommandManager;
+import vg.civcraft.mc.civmodcore.dao.DefaultDatasource;
 import vg.civcraft.mc.civmodcore.dao.DatabaseCredentials;
 import vg.civcraft.mc.civmodcore.dao.ManagedDatasource;
 import vg.civcraft.mc.civmodcore.events.CustomEventMapper;
@@ -44,6 +45,7 @@ public final class CivModCorePlugin extends ACivMod {
 	public void onEnable() {
 		instance = this;
 		registerConfigClass(DatabaseCredentials.class);
+		registerConfigClass(DefaultDatasource.class);
 		// Save default resources
 		saveDefaultResource("enchants.yml");
 		super.onEnable();
