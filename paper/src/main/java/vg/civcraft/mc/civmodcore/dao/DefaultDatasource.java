@@ -15,7 +15,7 @@ import vg.civcraft.mc.civmodcore.CivModCorePlugin;
  * <p>Example usage: <pre>{@code
  * database:
  *   ==: vg.civcraft.mc.civmodcore.dao.DefaultDatasource
- * }</pre></p>
+ * }</pre>
  *
  * <p>No other values are needed, nor are considered, so any other information, such as the username/hostname/etc can be
  * commented out to reduce confusion.</p>
