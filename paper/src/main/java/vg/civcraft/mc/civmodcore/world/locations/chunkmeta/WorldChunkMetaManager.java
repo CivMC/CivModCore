@@ -6,12 +6,15 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import org.bukkit.World;
+import vg.civcraft.mc.civmodcore.CivModCoreConfig;
+import vg.civcraft.mc.civmodcore.CivModCorePlugin;
 
 /**
  * Stores Chunk metadata for all plugins for one specific world. Metadata is
@@ -41,8 +44,7 @@ public class WorldChunkMetaManager {
 	 */
 	private final Set<ChunkCoord> unloadingQueue;
 	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-	private Thread chunkLoadingConsumer;
-	private LinkedBlockingQueue<ChunkCoord> chunkLoadingQueue;
+	private final Executor chunkLoadingExecutor = Executors.newCachedThreadPool();
 	private World world;
 
 	public WorldChunkMetaManager(World world, short worldID) {
@@ -57,7 +59,6 @@ public class WorldChunkMetaManager {
 			return a.compareTo(b);
 		}));
 		registerUnloadRunnable();
-		startChunkLoadingConsumer();
 		registerRegularSaveRunnable();
 	}
 
@@ -111,10 +112,7 @@ public class WorldChunkMetaManager {
 			if (populate) {
 				// up until here we are still sync from the ChunkLoadEvent, so we need to
 				// offload the actual db load to another thread
-				synchronized (chunkLoadingQueue) {
-					chunkLoadingQueue.add(coord);
-					chunkLoadingQueue.notifyAll();
-				}
+				chunkLoadingExecutor.execute(coord::loadAll);
 			}
 			return coord;
 		}
@@ -122,9 +120,9 @@ public class WorldChunkMetaManager {
 
 	/**
 	 * Retrieves the chunk meta for a specific chunk for a specific plugin.
-	 * 
+	 *
 	 * DO NOT USE THIS FOR UNLOADED CHUNKS, THINGS WILL BREAK HORRIBLY
-	 * 
+	 *
 	 * @param pluginID Internal id of the plugin
 	 * @param x        X-coordinate of the chunk
 	 * @param z        Z-coordinate of the chunk
@@ -141,7 +139,7 @@ public class WorldChunkMetaManager {
 	/**
 	 * Inserts new chunk metadata, overwriting any existing one for the same plugin
 	 * and the same chunk
-	 * 
+	 *
 	 * @param x    X-coordinate of the chunk
 	 * @param z    Z-coordinate of the chunk
 	 * @param meta Metadata to insert
@@ -155,7 +153,7 @@ public class WorldChunkMetaManager {
 	/**
 	 * Called when the underlying minecraft chunk is loaded. Loads the chunk
 	 * metadata from the database if its not already available in the cache
-	 * 
+	 *
 	 * @param x X-coordinate of the chunk
 	 * @param z Z-coordinate of the chunk
 	 */
@@ -166,7 +164,7 @@ public class WorldChunkMetaManager {
 		}
 		chunkCoord.minecraftChunkLoaded();
 	}
-	
+
 	private void registerRegularSaveRunnable() {
 		scheduler.scheduleWithFixedDelay(() -> {
 			//we don't take a lock on metas, because we will not modify it
@@ -226,24 +224,6 @@ public class WorldChunkMetaManager {
 			}
 
 		}, UNLOAD_CHECK_INTERVAL, UNLOAD_CHECK_INTERVAL, TimeUnit.MILLISECONDS);
-	}
-
-	private void startChunkLoadingConsumer() {
-		this.chunkLoadingQueue = new LinkedBlockingQueue<>();
-		chunkLoadingConsumer = new Thread(() -> {
-			while (true) {
-				ChunkCoord coord = null;
-				try {
-					coord = chunkLoadingQueue.take();
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-					continue;
-				}
-				coord.loadAll();
-				coord = null;
-			}
-		});
-		chunkLoadingConsumer.start();
 	}
 
 	/**
