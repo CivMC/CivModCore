@@ -5,6 +5,11 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.player.PlayerMoveEvent;
 
+/**
+ * @deprecated Please listen to {@link PlayerMoveEvent} instead and check for
+ *             {@link PlayerMoveEvent#hasExplicitlyChangedBlock()}.
+ */
+@Deprecated
 public class PlayerMoveBlockEvent extends PlayerMoveEvent {
 
 	private static final HandlerList handlers = new HandlerList();
