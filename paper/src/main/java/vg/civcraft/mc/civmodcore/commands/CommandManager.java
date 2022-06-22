@@ -50,9 +50,9 @@ public class CommandManager extends BukkitCommandManager {
 	 * {@link #unregisterCompletions()}, otherwise there may be issues.
 	 */
     public final void init() {
-		registerCommands();
-		registerCompletions(getCommandCompletions());
 		registerContexts(getCommandContexts());
+		registerCompletions(getCommandCompletions());
+		registerCommands();
 	}
 
 	/**
