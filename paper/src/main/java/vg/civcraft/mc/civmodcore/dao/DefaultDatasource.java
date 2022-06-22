@@ -19,6 +19,9 @@ import vg.civcraft.mc.civmodcore.CivModCorePlugin;
  *
  * <p>No other values are needed, nor are considered, so any other information, such as the username/hostname/etc can be
  * commented out to reduce confusion.</p>
+ *
+ * <p><b>BE WARNED! IF YOU'RE PLANNING ON USING THIS, YOU WILL NEED TO SET YOUR POOL SIZE TO A MUCH HIGHER VALUE IN
+ * YOUR CIVMODCORE'S CONFIG!</b></p>
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class DefaultDatasource implements ConfigurationSerializable {
