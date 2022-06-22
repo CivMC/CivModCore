@@ -73,6 +73,7 @@ public class CommandManager extends BukkitCommandManager {
 		completions.registerAsyncCompletion("allplayers", (context) ->
 				Arrays.stream(Bukkit.getOfflinePlayers())
 						.map(OfflinePlayer::getName)
+						.filter(Objects::nonNull)
 						.toList());
 		completions.registerAsyncCompletion("materials", (context) ->
 				Arrays.stream(Material.values())
