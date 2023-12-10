@@ -13,4 +13,5 @@ plugins {
 rootProject.name = "civmodcore"
 
 include(":paper")
+
 project(":paper").name = rootProject.name + "-paper"
