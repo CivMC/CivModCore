@@ -7,12 +7,9 @@ import java.util.List;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import lombok.experimental.UtilityClass;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TranslatableComponent;
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Material;
 import org.bukkit.Tag;
-import org.bukkit.inventory.ItemStack;
 
 /**
  * <p>See <a href="https://github.com/Protonull/BukkitReport/tree/master/reports">BukkitReports</a>.</p>
@@ -43,18 +40,6 @@ public final class MaterialUtils {
 	@Nullable
 	public static Material getMaterial(@Nullable final String value) {
 		return StringUtils.isEmpty(value) ? null : Material.getMaterial(value.toUpperCase());
-	}
-
-	/**
-	 * {@link ItemUtils#asTranslatable(ItemStack)} is preferable since that will return a translatable based on
-	 * additional item data, such as Potion becoming Potion of Water Breathing or Potion of Regeneration.
-	 *
-	 * @param material The material to translate.
-	 * @return Returns a translatable component based on the given material.
-	 */
-	@Nonnull
-	public static TranslatableComponent asTranslatable(@Nonnull final Material material) {
-		return Component.translatable(material.translationKey());
 	}
 
 	/**
