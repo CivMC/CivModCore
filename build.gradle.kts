@@ -18,6 +18,9 @@ subprojects {
         maven("https://repo.aikar.co/content/groups/aikar/")
         maven("https://libraries.minecraft.net")
 
+		// For AnvilGUI
+		maven("https://repo.codemc.io/repository/maven-snapshots/")
+
 		maven("https://jitpack.io")
 	}
 }
