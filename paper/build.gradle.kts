@@ -14,7 +14,7 @@ dependencies {
 	implementation("com.zaxxer:HikariCP:5.0.1")
 	implementation("co.aikar:taskchain-bukkit:3.7.2")
 	implementation("com.github.IPVP-MC:canvas:91ec97f076")
-	compileOnlyApi("net.wesjd:anvilgui:1.9.2-SNAPSHOT")
+	implementation("net.wesjd:anvilgui:1.9.2-SNAPSHOT")
 	implementation("org.apache.commons:commons-lang3:3.12.0")
 	implementation("org.apache.commons:commons-collections4:4.4")
 	implementation("com.google.code.findbugs:jsr305:3.0.2")

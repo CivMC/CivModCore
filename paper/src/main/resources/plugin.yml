@@ -10,5 +10,3 @@ permissions:
     default: op
   cmc.debug:
     default: op
-libraries:
-  - "net.wesjd:anvilgui:1.9.2-SNAPSHOT"
