@@ -10,7 +10,9 @@ plugins {
 	id("com.gradle.enterprise") version("3.16")
 }
 
+
 rootProject.name = "civmodcore"
 
 include(":paper")
+
 project(":paper").name = rootProject.name + "-paper"
